@@ -90,7 +90,7 @@ const DailyBreakdown = ({
               />
               <YAxis tick={{ fontSize: 10 }} />
               <Tooltip
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value) => formatCurrency(Number(value ?? 0))}
                 labelStyle={{ fontSize: 11 }}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />

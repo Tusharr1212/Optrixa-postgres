@@ -89,7 +89,10 @@ const ProductFormModal = ({ product, onClose }: Props) => {
     if (isEditing) {
       updateMutation.mutate({ id: product.id, data });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate({
+  ...data,
+  supplierId: data.supplierId ?? undefined
+});
     }
   };
 

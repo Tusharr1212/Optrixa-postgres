@@ -2,13 +2,12 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const axiosClient = axios.create({
-  baseURL: 'http://localhost:5019/api',
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5019/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor — attach JWT token to every request automatically
 axiosClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
   if (token) {
@@ -17,7 +16,6 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor — handle 401 globally
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {

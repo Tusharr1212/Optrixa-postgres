@@ -4,7 +4,7 @@ import { Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { salesApi } from '../../api/salesApi';
 import { formatCurrency, formatDate, getPaymentStatusColor } from '../../utils/formatters';
-import type { Sale } from '../../types/sale.types';
+// import type { Sale } from '../../types/sale.types';
 import CreateSaleModal from './CreateSaleModal';
 import PageHeader from '../../components/ui/PageHeader';
 import { ShoppingCart } from 'lucide-react';

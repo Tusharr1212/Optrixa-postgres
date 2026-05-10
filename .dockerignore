@@ -10,3 +10,4 @@ optrixa-ui/
 tests/
 README.md
 *.md
+optrixa-ui/.env.local
