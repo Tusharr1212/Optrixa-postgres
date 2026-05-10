@@ -24,13 +24,21 @@ public class GetDashboardSummaryQueryHandler
 
         // ── Selected Period ───────────────────────────────────
         var periodStart = request.FromDate.HasValue
-            ? DateTime.SpecifyKind(request.FromDate.Value, DateTimeKind.Utc)
-            : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+    ? new DateTime(
+        request.FromDate.Value.Year,
+        request.FromDate.Value.Month,
+        request.FromDate.Value.Day,
+        0, 0, 0, DateTimeKind.Utc)
+    : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        var periodEnd = request.ToDate.HasValue
-            ? DateTime.SpecifyKind(request.ToDate.Value, DateTimeKind.Utc)
-            : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc)
-                .AddMonths(1);
+var periodEnd = request.ToDate.HasValue
+    ? new DateTime(
+        request.ToDate.Value.Year,
+        request.ToDate.Value.Month,
+        request.ToDate.Value.Day,
+        23, 59, 59, DateTimeKind.Utc)
+    : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc)
+        .AddMonths(1);
 
         // ── Revenue ───────────────────────────────────────────
         var revenueToday = await _uow.Sales
