@@ -122,7 +122,7 @@ const LoginPage = () => {
 
           
           <div className="mt-6 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 font-medium mb-1">Kindly Reach out to me throught mail or LinkedIn for creds😊</p>
+            <p className="text-xs text-gray-500 font-medium mb-1">Kindly Reach out to me through mail or LinkedIn for creds😊</p>
           </div>
         </div>
       </div>
