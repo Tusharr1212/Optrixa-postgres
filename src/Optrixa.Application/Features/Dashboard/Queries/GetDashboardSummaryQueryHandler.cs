@@ -21,10 +21,11 @@ public class GetDashboardSummaryQueryHandler
     var todayEnd = todayStart.AddDays(1);
 
     // Use provided dates or default to current month
-    var periodStart = request.FromDate?.ToUniversalTime()
-        ?? new DateTime(now.Year, now.Month, 1);
-    var periodEnd = request.ToDate?.ToUniversalTime()
-        ?? new DateTime(now.Year, now.Month + 1, 1);
+    var periodStart = request.FromDate?.UtcDateTime
+    ?? new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero).UtcDateTime;
+
+var periodEnd = request.ToDate?.UtcDateTime
+    ?? new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero).AddMonths(1).UtcDateTime;
 
     // Revenue for selected period
     var revenueToday = await _uow.Sales
