@@ -86,7 +86,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:5173",
                 "http://localhost:5174",
                 // Add your Vercel URL after deployment
-                "https://optrixa-ui.vercel.app"
+                "https://optrixa-ui.vercel.app",
+                "https://optrixa-postgres.onrender.com"
             )
             .AllowAnyHeader()
             .AllowAnyMethod());
