@@ -24,7 +24,7 @@ Live Wesite Link: https://optrixa-ui.vercel.app/dashboard
 
 - Login Creds (As employee only):<br>
 Email: Tzzzz@gmail.com<br>
-Password: Tzzz123456
+Password: Tzzzz123456
 
 ---
 
