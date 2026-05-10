@@ -40,21 +40,13 @@ const CategoriesPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) =>
-      fetch(`http://localhost:5019/api/Categories/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('optrixa-auth')
-            ? JSON.parse(localStorage.getItem('optrixa-auth')!).state.token
-            : ''}`,
-        },
-      }).then(r => r.json()),
-    onSuccess: () => {
-      toast.success('Category deleted.');
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
-    },
-    onError: () => toast.error('Failed to delete category.'),
-  });
+  mutationFn: categoriesApi.delete,
+  onSuccess: () => {
+    toast.success('Category deleted.');
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
+  },
+  onError: () => toast.error('Failed to delete category.'),
+});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
