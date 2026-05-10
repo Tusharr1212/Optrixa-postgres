@@ -15,15 +15,20 @@ public class GetDailyBreakdownQueryHandler
         GetDailyBreakdownQuery request,
         CancellationToken cancellationToken)
     {
-        var daysInMonth = DateTime.DaysInMonth(request.Year, request.Month);
+        var daysInMonth = DateTime.DaysInMonth(
+            request.Year, request.Month);
+
+        var today = DateTime.UtcNow.Date;
         var days = new List<DailyDataPoint>();
 
         for (int day = 1; day <= daysInMonth; day++)
         {
-            var date = new DateTime(request.Year, request.Month, day);
+            var date = new DateTime(
+                request.Year, request.Month, day,
+                0, 0, 0, DateTimeKind.Utc);
 
             // Skip future dates
-            if (date.Date > DateTime.UtcNow.Date) break;
+            if (date.Date > today) break;
 
             var dayStart = date;
             var dayEnd = date.AddDays(1);
@@ -35,26 +40,27 @@ public class GetDailyBreakdownQueryHandler
 
             days.Add(new DailyDataPoint
             {
-                Day = day,
-                Date = date.ToString("MMM dd, yyyy"),
-                DayName = date.ToString("ddd"),
-                Revenue = revenue,
+                Day      = day,
+                Date     = date.ToString("MMM dd, yyyy"),
+                DayName  = date.ToString("ddd"),
+                Revenue  = revenue,
                 Expenses = expenses,
-                Profit = revenue - expenses,
+                Profit   = revenue - expenses,
             });
         }
 
-        var totalRevenue = days.Sum(d => d.Revenue);
+        var totalRevenue  = days.Sum(d => d.Revenue);
         var totalExpenses = days.Sum(d => d.Expenses);
 
         return ApiResponse<DailyBreakdownDto>.Ok(new DailyBreakdownDto
         {
-            Month = new DateTime(request.Year, request.Month, 1)
-                .ToString("MMMM yyyy"),
-            Days = days,
-            TotalRevenue = totalRevenue,
+            Month         = new DateTime(request.Year, request.Month, 1,
+                                0, 0, 0, DateTimeKind.Utc)
+                                .ToString("MMMM yyyy"),
+            Days          = days,
+            TotalRevenue  = totalRevenue,
             TotalExpenses = totalExpenses,
-            TotalProfit = totalRevenue - totalExpenses,
+            TotalProfit   = totalRevenue - totalExpenses,
         });
     }
 }

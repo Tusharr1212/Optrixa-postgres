@@ -19,17 +19,44 @@ public class AppDbContext : IdentityDbContext<OptrixaUser>
     public DbSet<Optrixa.Domain.Entities.StockMovement> StockMovements => Set<Optrixa.Domain.Entities.StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder builder)
+{
+    base.OnModelCreating(builder);
+
+    builder.ApplyConfigurationsFromAssembly(
+        typeof(AppDbContext).Assembly);
+
+    // Fix PostgreSQL datetime — store all as UTC
+    foreach (var entityType in builder.Model.GetEntityTypes())
     {
-        base.OnModelCreating(builder);
-
-        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-
-        // Global soft delete filters
-        builder.Entity<Optrixa.Domain.Entities.Product>().HasQueryFilter(x => !x.IsDeleted);
-        builder.Entity<Optrixa.Domain.Entities.Category>().HasQueryFilter(x => !x.IsDeleted);
-        builder.Entity<Optrixa.Domain.Entities.Supplier>().HasQueryFilter(x => !x.IsDeleted);
-        builder.Entity<Optrixa.Domain.Entities.Customer>().HasQueryFilter(x => !x.IsDeleted);
-        builder.Entity<Optrixa.Domain.Entities.Sale>().HasQueryFilter(x => !x.IsDeleted);
-        builder.Entity<Optrixa.Domain.Entities.Expense>().HasQueryFilter(x => !x.IsDeleted);
+        foreach (var property in entityType.GetProperties())
+        {
+            if (property.ClrType == typeof(DateTime) ||
+                property.ClrType == typeof(DateTime?))
+            {
+                property.SetValueConverter(
+                    new Microsoft.EntityFrameworkCore
+                        .Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+                        v => v.Kind == DateTimeKind.Utc
+                            ? v
+                            : v.ToUniversalTime(),
+                        v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
+                    ));
+            }
+        }
     }
+
+    // Global soft delete filters
+    builder.Entity<Domain.Entities.Product>()
+        .HasQueryFilter(x => !x.IsDeleted);
+    builder.Entity<Domain.Entities.Category>()
+        .HasQueryFilter(x => !x.IsDeleted);
+    builder.Entity<Domain.Entities.Supplier>()
+        .HasQueryFilter(x => !x.IsDeleted);
+    builder.Entity<Domain.Entities.Customer>()
+        .HasQueryFilter(x => !x.IsDeleted);
+    builder.Entity<Domain.Entities.Sale>()
+        .HasQueryFilter(x => !x.IsDeleted);
+    builder.Entity<Domain.Entities.Expense>()
+        .HasQueryFilter(x => !x.IsDeleted);
+}
 }
