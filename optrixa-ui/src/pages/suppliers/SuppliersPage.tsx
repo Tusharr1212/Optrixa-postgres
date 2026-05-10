@@ -665,7 +665,7 @@ const SuppliersPage = () => {
                                         {exp.title}
                                       </td>
                                       <td className="px-4 py-2.5 text-gray-500">
-                                        {exp.categoryName}
+                                        {exp.categoryName ?? exp.category?.name ?? '—'}
                                       </td>
                                       <td className="px-4 py-2.5 text-gray-500">
                                         {formatDate(exp.expenseDate)}

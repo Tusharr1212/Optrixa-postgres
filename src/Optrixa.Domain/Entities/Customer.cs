@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Optrixa.Domain.Common;
 
 namespace Optrixa.Domain.Entities;
@@ -8,9 +9,8 @@ public class Customer : BaseEntity
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
-
-    // Denormalized for fast dashboard queries — updated after each sale
     public decimal TotalPurchases { get; set; } = 0;
 
+    [JsonIgnore]
     public ICollection<Sale> Sales { get; set; } = new List<Sale>();
 }

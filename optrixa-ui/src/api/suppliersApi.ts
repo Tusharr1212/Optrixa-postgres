@@ -8,7 +8,11 @@ export interface SupplierExpense {
   isPaid: boolean;
   paidAt?: string;
   expenseDate: string;
-  categoryName: string;
+  categoryId: number;
+  category?: {
+    name: string;
+  };
+  categoryName?: string;
 }
 
 export interface Supplier {
