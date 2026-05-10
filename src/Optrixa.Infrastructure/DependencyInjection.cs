@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Optrixa.Domain.Interfaces;
 using Optrixa.Infrastructure.Identity;
 using Optrixa.Infrastructure.Persistence;
@@ -15,11 +16,12 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration config)
     {
-        // ── Database ───────────────────────────────────────────────────────
+        // ── Database — PostgreSQL ──────────────────────────────
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(config.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(                           // ← changed
+                config.GetConnectionString("DefaultConnection")));
 
-        // ── Identity ───────────────────────────────────────────────────────
+        // ── Identity ──────────────────────────────────────────
         services.AddIdentity<OptrixaUser, IdentityRole>(options =>
         {
             options.Password.RequireDigit = true;
@@ -31,19 +33,20 @@ public static class DependencyInjection
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
 
-        // ── JWT Settings ───────────────────────────────────────────────────
+        // ── JWT Settings ──────────────────────────────────────
         var tokenSettings = new TokenSettings();
         config.GetSection(nameof(TokenSettings)).Bind(tokenSettings);
         services.AddSingleton(tokenSettings);
         services.AddScoped<JwtService>();
 
-        // ── Repositories ───────────────────────────────────────────────────
+        // ── Repositories ──────────────────────────────────────
         services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<ISaleRepository, SaleRepository>();        // Coming soon
-        services.AddScoped<IExpenseRepository, ExpenseRepository>();  // Coming soon
+        services.AddScoped<ISaleRepository, SaleRepository>();
+        services.AddScoped<IExpenseRepository, ExpenseRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<ISupplierRepository, SupplierRepository>();
+
         return services;
     }
 }

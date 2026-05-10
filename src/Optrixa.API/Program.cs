@@ -2,36 +2,34 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Optrixa.Application;
 using Optrixa.Infrastructure;
+using Optrixa.Infrastructure.Persistence;
 using Optrixa.API.Middleware;
 using Serilog;
 using System.Text;
 using Optrixa.API;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Serilog Logging ────────────────────────────────────────────────────────
+// ── Port binding — Render sets PORT env variable ───────────────
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+builder.WebHost.UseUrls($"http://+:{port}");
+
+// ── Serilog ────────────────────────────────────────────────────
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
     .WriteTo.Console()
-    .WriteTo.File("logs/optrixa-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 builder.Host.UseSerilog();
 
-// ── Controllers + Swagger ──────────────────────────────────────────────────
-builder.Services.AddControllers().AddJsonOptions(x =>
-    {
-        x.JsonSerializerOptions.ReferenceHandler =
-            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    });
+// ── Controllers + Swagger ──────────────────────────────────────
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Optrixa API", Version = "v1" });
-
-    // Adds the JWT authorize button to Swagger UI
     c.AddSecurityDefinition("Bearer", new()
     {
-        Description = "JWT Authorization header. Enter: Bearer {your token}",
+        Description = "JWT Authorization. Enter: Bearer {token}",
         Name = "Authorization",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
@@ -53,14 +51,12 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ── Application + Infrastructure Layers ───────────────────────────────────
+// ── Application + Infrastructure ──────────────────────────────
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-
-// ── JWT Authentication ─────────────────────────────────────────────────────
+// ── JWT Authentication ─────────────────────────────────────────
 var tokenSettings = builder.Configuration.GetSection("TokenSettings");
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -81,43 +77,67 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ── CORS for React Frontend ────────────────────────────────────────────────
+// ── CORS ───────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactApp", policy =>
-        policy.WithOrigins("http://localhost:5173")  // Vite default port
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+        policy
+            .WithOrigins(
+                "http://localhost:5173",
+                "http://localhost:5174",
+                // Add your Vercel URL after deployment
+                "https://optrixa-ui.vercel.app"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
-// ── Build the App ──────────────────────────────────────────────────────────
 var app = builder.Build();
 
-// ── Seed Database ──────────────────────────────────────────────────────────
+// ── Auto migrate + seed on startup ────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
-    await DbSeeder.SeedAsync(scope.ServiceProvider);
-}
-
-// ── Middleware Pipeline ────────────────────────────────────────────────────
-// Order matters here — don't rearrange these
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    try
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Optrixa API v1");
-        c.RoutePrefix = string.Empty; // Swagger opens at root URL
-    });
+        var db = scope.ServiceProvider
+            .GetRequiredService<AppDbContext>();
+
+        // Always run migrations on startup
+        db.Database.Migrate();
+
+        // Seed default data
+        await DbSeeder.SeedAsync(scope.ServiceProvider);
+
+        Log.Information("Database migrated and seeded successfully.");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Error during database migration/seeding.");
+    }
 }
 
-app.UseMiddleware<ExceptionMiddleware>();  // Must be first — catches all errors
-app.UseSerilogRequestLogging();           // Logs every HTTP request
+// ── Middleware Pipeline ────────────────────────────────────────
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Optrixa API v1");
+    c.RoutePrefix = "swagger";
+});
+
+// Health check endpoint — Render pings this
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    version = "1.0.0"
+}));
+
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
-app.UseCors("ReactApp");                  // Must be before UseAuthentication
-app.UseAuthentication();                  // Who are you?
-app.UseAuthorization();                   // What are you allowed to do?
+app.UseCors("ReactApp");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
