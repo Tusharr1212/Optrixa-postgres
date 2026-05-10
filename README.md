@@ -21,8 +21,9 @@ Optrixa is a **production-grade SaaS-style business management system** built wi
 Clean Architecture, combining Inventory Management, Expense Tracking, Sales Management,
 and Profit/Loss Analytics in one unified platform.
 Live Wesite Link: https://optrixa-ui.vercel.app/dashboard
-Login Creds (As employee only):
-Email: Tzzzz@gmail.com
+
+- Login Creds (As employee only):<br>
+Email: Tzzzz@gmail.com<br>
 Password: Tzzz123456
 
 ---
